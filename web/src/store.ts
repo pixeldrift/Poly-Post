@@ -44,7 +44,7 @@ interface MapperState {
   previewIndex: number;
 
   isImportModalOpen: boolean;
-  editingConnectionId: string | null;
+  editingClusterKey: string | null;
 
   lastGeneratedBatch: GeneratedBatch | null;
 
@@ -71,8 +71,8 @@ interface MapperState {
   removeConnection: (id: string) => void;
   removeSourceFromConnection: (connectionId: string, sourceId: string) => void;
 
-  openEditConnection: (id: string) => void;
-  closeEditConnection: () => void;
+  openEditCluster: (key: string) => void;
+  closeEditCluster: () => void;
 
   setTemplate: (template: string) => void;
   setPreviewIndex: (index: number) => void;
@@ -100,7 +100,7 @@ export const useMapperStore = create<MapperState>((set, get) => ({
   previewIndex: 0,
 
   isImportModalOpen: false,
-  editingConnectionId: null,
+  editingClusterKey: null,
 
   lastGeneratedBatch: null,
 
@@ -132,6 +132,7 @@ export const useMapperStore = create<MapperState>((set, get) => ({
         selectedTemplate: schema.templates?.[0] ?? '',
         previewIndex: 0,
         lastGeneratedBatch: null,
+        editingClusterKey: null,
       };
     }),
 
@@ -152,6 +153,7 @@ export const useMapperStore = create<MapperState>((set, get) => ({
         connections: autoMatch(state.sourceFields, schema),
         selectedTemplate: schema.templates?.[0] ?? '',
         previewIndex: 0,
+        editingClusterKey: null,
       };
     }),
 
@@ -159,6 +161,7 @@ export const useMapperStore = create<MapperState>((set, get) => ({
     set((state) => ({
       connections: autoMatch(state.sourceFields, state.selectedSchema()),
       previewIndex: 0,
+      editingClusterKey: null,
     })),
 
   openImportModal: () => set({ isImportModalOpen: true }),
@@ -221,7 +224,6 @@ export const useMapperStore = create<MapperState>((set, get) => ({
   removeConnection: (id) =>
     set((state) => ({
       connections: state.connections.filter((c) => c.id !== id),
-      editingConnectionId: state.editingConnectionId === id ? null : state.editingConnectionId,
     })),
 
   removeSourceFromConnection: (connectionId, sourceId) =>
@@ -246,8 +248,8 @@ export const useMapperStore = create<MapperState>((set, get) => ({
       };
     }),
 
-  openEditConnection: (id) => set({ editingConnectionId: id }),
-  closeEditConnection: () => set({ editingConnectionId: null }),
+  openEditCluster: (key) => set({ editingClusterKey: key }),
+  closeEditCluster: () => set({ editingClusterKey: null }),
 
   setTemplate: (template) => set({ selectedTemplate: template }),
   setPreviewIndex: (index) =>

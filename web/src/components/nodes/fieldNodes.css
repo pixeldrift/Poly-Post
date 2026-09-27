@@ -1,5 +1,7 @@
 .field-node {
-  width: 208px;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
   background: var(--color-surface);
   border: 1.5px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -12,6 +14,13 @@
 
 .field-node.is-connected {
   border-color: var(--color-teal);
+}
+
+.field-node.is-tray {
+  border-style: dashed;
+  border-color: var(--color-text-faint);
+  background: var(--color-surface);
+  box-shadow: none;
 }
 
 .field-node-main {
@@ -82,4 +91,115 @@
   height: 12px !important;
   background: var(--color-teal) !important;
   border: 2px solid var(--color-surface) !important;
+}
+
+.tray-box-node {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  border: 1.5px dashed var(--color-text-faint);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-muted);
+  padding: 8px 12px 0;
+}
+
+.tray-box-label {
+  display: inline-block;
+  font-size: 10.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 2px 9px;
+}
+
+.react-flow__node-hub {
+  /* React Flow sets pointer-events:none on nodes with no drag/select/connect
+     interactions; this node is deliberately none of those but still needs
+     its own click handler to fire. */
+  pointer-events: auto !important;
+}
+
+.hub-node-wrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hub-handle {
+  opacity: 0;
+  pointer-events: none;
+  width: 4px !important;
+  height: 4px !important;
+}
+
+.hub-node {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 3px solid var(--color-ok);
+  background: var(--color-ok-soft);
+  color: var(--color-ok);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+  transition: transform 0.12s ease;
+  padding: 0;
+}
+
+.hub-node svg {
+  width: 20px;
+  height: 20px;
+}
+
+.hub-node:hover {
+  transform: scale(1.12);
+}
+
+.hub-node.status-needs-input {
+  border-color: var(--color-needs);
+  background: var(--color-needs-soft);
+  color: var(--color-needs);
+}
+
+.hub-node.status-warning {
+  border-color: var(--color-warning);
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
+}
+
+.divider-line-node {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    var(--color-teal-soft) 6%,
+    var(--color-teal-soft) 94%,
+    transparent
+  );
+  pointer-events: none;
+}
+
+.divider-line-node::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  transform: translateX(-50%);
+  background: var(--color-teal);
+  opacity: 0.55;
+  border-radius: 1px;
 }

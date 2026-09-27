@@ -8,13 +8,37 @@
 .mapper-canvas-header {
   display: flex;
   justify-content: space-between;
-  padding: 12px 40px 10px 40px;
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--color-text-muted);
+  padding: 14px 40px 12px 40px;
   border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface-muted);
+}
+
+.mapper-canvas-header span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--color-text);
+}
+
+.mapper-canvas-header span::before {
+  content: '';
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--color-teal);
+  box-shadow: 0 0 0 3px var(--color-teal-soft);
+}
+
+.mapper-canvas-header span:last-child {
+  flex-direction: row-reverse;
+}
+
+.mapper-canvas-header span:last-child::before {
+  background: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-soft);
 }
 
 .mapper-canvas-body {

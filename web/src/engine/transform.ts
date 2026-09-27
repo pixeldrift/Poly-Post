@@ -62,6 +62,12 @@ export function resolveConnectionValue(connection: Connection, row: SourceRow): 
   return formatValue(resolveRawValue(connection, row), connection.format);
 }
 
+export function aggregateStatus(statuses: ConnectionStatus[]): ConnectionStatus {
+  if (statuses.includes('needs-input')) return 'needs-input';
+  if (statuses.includes('warning')) return 'warning';
+  return 'ok';
+}
+
 export function connectionStatus(connection: Connection): ConnectionStatus {
   if (connection.type === 'split') {
     const hasSeparator = (connection.splitSeparators ?? []).some((s) => s.trim() !== '');

@@ -12,7 +12,7 @@ export function TargetFieldNode({ data }: NodeProps<TargetNodeData>) {
   return (
     <div
       className={`field-node target-field-node${data.group ? ` group-${data.group}` : ''}${
-        data.connected ? ' is-connected' : ''
+        data.connected ? ' is-connected' : ' is-tray'
       }`}
     >
       <Handle type="target" position={Position.Left} className="field-handle" />
