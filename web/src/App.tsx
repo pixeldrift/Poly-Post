@@ -32,24 +32,26 @@ function App() {
           <span className="app-subtitle">{scenario.label}</span>
         </div>
         <div className="app-header-controls">
-          <label className="field-label" htmlFor="scenario-select">
-            Scenario
-          </label>
-          <select
-            id="scenario-select"
-            className="select"
-            value={selectedScenarioId}
-            onChange={(e) => selectScenario(e.target.value)}
-          >
-            {scenarios.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.label}
-              </option>
-            ))}
-          </select>
+          <div className="header-control-group">
+            <label className="field-label" htmlFor="scenario-select">
+              Scenario
+            </label>
+            <select
+              id="scenario-select"
+              className="select"
+              value={selectedScenarioId}
+              onChange={(e) => selectScenario(e.target.value)}
+            >
+              {scenarios.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.label}
+                </option>
+              ))}
+            </select>
+          </div>
 
           {targetSchemas.length > 1 && (
-            <>
+            <div className="header-control-group">
               <label className="field-label" htmlFor="target-schema-select">
                 Target
               </label>
@@ -65,7 +67,7 @@ function App() {
                   </option>
                 ))}
               </select>
-            </>
+            </div>
           )}
         </div>
       </header>

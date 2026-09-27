@@ -295,9 +295,11 @@ export function MapperCanvas() {
           <span>Target</span>
         </div>
         <div className="mapper-canvas-body" style={{ height: layoutInfo.height }}>
-          <ReactFlowProvider>
-            <CanvasInner onLayoutInfo={setLayoutInfo} />
-          </ReactFlowProvider>
+          <div className="mapper-canvas-flow" style={{ width: CANVAS_CONTENT_WIDTH }}>
+            <ReactFlowProvider>
+              <CanvasInner onLayoutInfo={setLayoutInfo} />
+            </ReactFlowProvider>
+          </div>
         </div>
         {layoutInfo.hasTray && (
           <p className="mapper-canvas-hint" style={{ opacity: layoutInfo.hintOpacity }}>

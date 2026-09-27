@@ -47,6 +47,13 @@
   min-width: 0;
 }
 
+.header-control-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
 .field-label {
   font-size: 12px;
   font-weight: 600;
@@ -78,8 +85,10 @@
 
 .app-toolbar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
+  gap: 8px 16px;
   padding: 8px 24px;
   background: var(--color-surface-muted);
   border-bottom: 1px solid var(--color-border);
