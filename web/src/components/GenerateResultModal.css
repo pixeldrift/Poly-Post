@@ -1,0 +1,29 @@
+.generate-summary {
+  margin: 0 0 12px;
+  font-size: 13.5px;
+}
+
+.generate-list {
+  margin: 0 0 12px;
+  padding: 0 0 0 18px;
+  max-height: 220px;
+  overflow-y: auto;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.generate-list li {
+  padding: 2px 0;
+}
+
+.generate-undo-hint {
+  margin: 0 0 14px;
+  font-size: 12px;
+  color: var(--color-text-faint);
+}
+
+.generate-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}

@@ -1,0 +1,49 @@
+.mapping-edge-path {
+  stroke: var(--color-teal);
+  stroke-width: 2;
+  opacity: 0.55;
+}
+
+.mapping-edge-path.status-needs-input {
+  stroke: var(--color-needs);
+  stroke-dasharray: 5 4;
+}
+
+.mapping-edge-path.status-warning {
+  stroke: var(--color-warning);
+}
+
+.mapping-edge-label {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid var(--color-ok);
+  background: var(--color-ok-soft);
+  color: var(--color-ok);
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  pointer-events: all;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.12s ease;
+}
+
+.mapping-edge-label:hover {
+  transform: scale(1.12);
+}
+
+.mapping-edge-label.status-needs-input {
+  border-color: var(--color-needs);
+  background: var(--color-needs-soft);
+  color: var(--color-needs);
+}
+
+.mapping-edge-label.status-warning {
+  border-color: var(--color-warning);
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
+}
