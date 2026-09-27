@@ -1,22 +1,43 @@
 import { create } from 'zustand';
-import type { Connection, PostTypeSchema, SourceField, SourceRow } from './types';
-import { EMPLOYEE_POST_TYPE, POST_TYPES, SOURCE_FIELDS, SOURCE_ROWS } from './data/mockData';
+import Papa from 'papaparse';
+import type { Connection, Scenario, SourceField, SourceRow, TargetSchema } from './types';
+import { SCENARIOS } from './data/scenarios';
 import { autoMatch, makeConnectionId } from './engine/match';
-import { resolveConnectionValue } from './engine/transform';
+import { buildPreviewRecord, resolveConnectionValue } from './engine/transform';
 
-export interface GeneratedBatch {
-  postType: string;
+export interface GeneratedPostBatch {
+  outputKind: 'wordpress';
+  schemaLabel: string;
   titles: string[];
   createdAt: number;
 }
 
+export interface GeneratedCsvBatch {
+  outputKind: 'csv';
+  schemaLabel: string;
+  fileName: string;
+  rowCount: number;
+  csvUrl: string;
+  previewRows: Record<string, string>[];
+  createdAt: number;
+}
+
+export type GeneratedBatch = GeneratedPostBatch | GeneratedCsvBatch;
+
+function revokeBatchUrl(batch: GeneratedBatch | null): void {
+  if (batch?.outputKind === 'csv') URL.revokeObjectURL(batch.csvUrl);
+}
+
 interface MapperState {
+  scenarios: Scenario[];
+  selectedScenarioId: string;
+
   sourceFileName: string;
   sourceFields: SourceField[];
   sourceRows: SourceRow[];
 
-  postTypes: PostTypeSchema[];
-  selectedPostTypeId: string;
+  targetSchemas: TargetSchema[];
+  selectedTargetSchemaId: string;
 
   connections: Connection[];
   selectedTemplate: string;
@@ -27,10 +48,12 @@ interface MapperState {
 
   lastGeneratedBatch: GeneratedBatch | null;
 
-  selectedSchema: () => PostTypeSchema;
+  selectedScenario: () => Scenario;
+  selectedSchema: () => TargetSchema;
 
+  selectScenario: (id: string) => void;
   setSourceData: (fileName: string, fields: SourceField[], rows: SourceRow[]) => void;
-  selectPostType: (id: string) => void;
+  selectTargetSchema: (id: string) => void;
   runAutoMatch: () => void;
 
   openImportModal: () => void;
@@ -54,20 +77,26 @@ interface MapperState {
   setTemplate: (template: string) => void;
   setPreviewIndex: (index: number) => void;
 
-  generatePosts: () => void;
+  generateOutput: () => void;
   undoLastGeneration: () => void;
 }
 
+const initialScenario = SCENARIOS[0];
+const initialSchema = initialScenario.targetSchemas[0];
+
 export const useMapperStore = create<MapperState>((set, get) => ({
-  sourceFileName: 'employee-directory.csv',
-  sourceFields: SOURCE_FIELDS,
-  sourceRows: SOURCE_ROWS,
+  scenarios: SCENARIOS,
+  selectedScenarioId: initialScenario.id,
 
-  postTypes: POST_TYPES,
-  selectedPostTypeId: EMPLOYEE_POST_TYPE.id,
+  sourceFileName: initialScenario.sourceFileName,
+  sourceFields: initialScenario.sourceFields,
+  sourceRows: initialScenario.sourceRows,
 
-  connections: autoMatch(SOURCE_FIELDS, EMPLOYEE_POST_TYPE),
-  selectedTemplate: EMPLOYEE_POST_TYPE.templates[0],
+  targetSchemas: initialScenario.targetSchemas,
+  selectedTargetSchemaId: initialSchema.id,
+
+  connections: autoMatch(initialScenario.sourceFields, initialSchema),
+  selectedTemplate: initialSchema.templates?.[0] ?? '',
   previewIndex: 0,
 
   isImportModalOpen: false,
@@ -75,10 +104,36 @@ export const useMapperStore = create<MapperState>((set, get) => ({
 
   lastGeneratedBatch: null,
 
+  selectedScenario: () => {
+    const state = get();
+    return state.scenarios.find((s) => s.id === state.selectedScenarioId) ?? state.scenarios[0];
+  },
   selectedSchema: () => {
     const state = get();
-    return state.postTypes.find((p) => p.id === state.selectedPostTypeId) ?? state.postTypes[0];
+    return (
+      state.targetSchemas.find((s) => s.id === state.selectedTargetSchemaId) ??
+      state.targetSchemas[0]
+    );
   },
+
+  selectScenario: (id) =>
+    set((state) => {
+      const scenario = state.scenarios.find((s) => s.id === id) ?? state.scenarios[0];
+      const schema = scenario.targetSchemas[0];
+      revokeBatchUrl(state.lastGeneratedBatch);
+      return {
+        selectedScenarioId: scenario.id,
+        sourceFileName: scenario.sourceFileName,
+        sourceFields: scenario.sourceFields,
+        sourceRows: scenario.sourceRows,
+        targetSchemas: scenario.targetSchemas,
+        selectedTargetSchemaId: schema.id,
+        connections: autoMatch(scenario.sourceFields, schema),
+        selectedTemplate: schema.templates?.[0] ?? '',
+        previewIndex: 0,
+        lastGeneratedBatch: null,
+      };
+    }),
 
   setSourceData: (fileName, fields, rows) =>
     set((state) => ({
@@ -89,13 +144,13 @@ export const useMapperStore = create<MapperState>((set, get) => ({
       previewIndex: 0,
     })),
 
-  selectPostType: (id) =>
+  selectTargetSchema: (id) =>
     set((state) => {
-      const schema = state.postTypes.find((p) => p.id === id) ?? state.postTypes[0];
+      const schema = state.targetSchemas.find((s) => s.id === id) ?? state.targetSchemas[0];
       return {
-        selectedPostTypeId: id,
+        selectedTargetSchemaId: id,
         connections: autoMatch(state.sourceFields, schema),
-        selectedTemplate: schema.templates[0],
+        selectedTemplate: schema.templates?.[0] ?? '',
         previewIndex: 0,
       };
     }),
@@ -200,9 +255,44 @@ export const useMapperStore = create<MapperState>((set, get) => ({
       previewIndex: Math.max(0, Math.min(index, state.sourceRows.length - 1)),
     })),
 
-  generatePosts: () =>
+  generateOutput: () =>
     set((state) => {
       const schema = state.selectedSchema();
+      revokeBatchUrl(state.lastGeneratedBatch);
+
+      if (schema.outputKind === 'csv') {
+        const rows = state.sourceRows.map((row) => {
+          const record = buildPreviewRecord(state.connections, row);
+          return schema.fields.map((f) => record[f.id] ?? '');
+        });
+        const csv = Papa.unparse({ fields: schema.fields.map((f) => f.label), data: rows });
+        const csvUrl = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+        const slug = schema.label
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '');
+        const fileName = `${slug}.csv`;
+        const previewRows = state.sourceRows.slice(0, 5).map((row) => {
+          const record = buildPreviewRecord(state.connections, row);
+          const obj: Record<string, string> = {};
+          schema.fields.forEach((f) => {
+            obj[f.label] = record[f.id] ?? '';
+          });
+          return obj;
+        });
+        return {
+          lastGeneratedBatch: {
+            outputKind: 'csv',
+            schemaLabel: schema.label,
+            fileName,
+            rowCount: rows.length,
+            csvUrl,
+            previewRows,
+            createdAt: Date.now(),
+          },
+        };
+      }
+
       const nameField = schema.fields.find((f) => /name/i.test(f.label));
       const titles = state.sourceRows.map((row, i) => {
         if (nameField) {
@@ -215,9 +305,18 @@ export const useMapperStore = create<MapperState>((set, get) => ({
         return `${schema.label} #${i + 1}`;
       });
       return {
-        lastGeneratedBatch: { postType: schema.label, titles, createdAt: Date.now() },
+        lastGeneratedBatch: {
+          outputKind: 'wordpress',
+          schemaLabel: schema.label,
+          titles,
+          createdAt: Date.now(),
+        },
       };
     }),
 
-  undoLastGeneration: () => set({ lastGeneratedBatch: null }),
+  undoLastGeneration: () =>
+    set((state) => {
+      revokeBatchUrl(state.lastGeneratedBatch);
+      return { lastGeneratedBatch: null };
+    }),
 }));

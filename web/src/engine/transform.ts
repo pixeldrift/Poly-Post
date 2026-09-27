@@ -1,4 +1,4 @@
-import type { Connection, ConnectionStatus, SourceField, SourceRow } from '../types';
+import type { Connection, ConnectionFormat, ConnectionStatus, SourceField, SourceRow } from '../types';
 
 export function splitValue(value: string, separators: string[]): string[] {
   if (separators.length === 0 || separators.every((s) => s === '')) return [value];
@@ -9,7 +9,37 @@ export function splitValue(value: string, separators: string[]): string[] {
   return value.split(new RegExp(pattern)).map((part) => part.trim());
 }
 
-export function resolveConnectionValue(connection: Connection, row: SourceRow): string {
+function formatPhone(value: string): string {
+  const digits = value.replace(/\D/g, '');
+  const tenDigits = digits.length === 11 && digits.startsWith('1') ? digits.slice(1) : digits;
+  if (tenDigits.length !== 10) return value.trim();
+  return `(${tenDigits.slice(0, 3)}) ${tenDigits.slice(3, 6)}-${tenDigits.slice(6)}`;
+}
+
+function formatTitleCase(value: string): string {
+  return value.trim().toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+/** Post-processes a resolved value — the "interpret this field as..." step from the proposal. */
+export function formatValue(value: string, format?: ConnectionFormat): string {
+  if (!value) return value;
+  switch (format) {
+    case 'phone':
+      return formatPhone(value);
+    case 'titlecase':
+      return formatTitleCase(value);
+    case 'uppercase':
+      return value.toUpperCase();
+    case 'lowercase':
+      return value.toLowerCase();
+    case 'trim':
+      return value.trim();
+    default:
+      return value;
+  }
+}
+
+function resolveRawValue(connection: Connection, row: SourceRow): string {
   switch (connection.type) {
     case 'direct':
       return row[connection.sourceIds[0]] ?? '';
@@ -26,6 +56,10 @@ export function resolveConnectionValue(connection: Connection, row: SourceRow): 
     default:
       return '';
   }
+}
+
+export function resolveConnectionValue(connection: Connection, row: SourceRow): string {
+  return formatValue(resolveRawValue(connection, row), connection.format);
 }
 
 export function connectionStatus(connection: Connection): ConnectionStatus {

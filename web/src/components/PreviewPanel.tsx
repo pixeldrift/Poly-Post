@@ -1,5 +1,6 @@
 import { useMapperStore } from '../store';
 import { renderPreviewCard } from '../engine/previewRender';
+import { buildPreviewRecord } from '../engine/transform';
 import './PreviewPanel.css';
 
 export function PreviewPanel() {
@@ -12,7 +13,9 @@ export function PreviewPanel() {
   const setTemplate = useMapperStore((s) => s.setTemplate);
 
   const row = sourceRows[previewIndex];
-  const card = row ? renderPreviewCard(schema, connections, row) : null;
+  const isCsv = schema.outputKind === 'csv';
+  const card = row && !isCsv ? renderPreviewCard(schema, connections, row) : null;
+  const csvRecord = row && isCsv ? buildPreviewRecord(connections, row) : null;
   const isCompact = selectedTemplate.toLowerCase().includes('compact');
   const isList = /list row/i.test(selectedTemplate);
 
@@ -20,21 +23,40 @@ export function PreviewPanel() {
     <aside className="preview-panel card">
       <div className="preview-panel-header">
         <span className="preview-panel-title">Preview Results</span>
-        <select
-          className="select select-sm"
-          value={selectedTemplate}
-          onChange={(e) => setTemplate(e.target.value)}
-        >
-          {schema.templates.map((t) => (
-            <option key={t} value={t}>
-              {t}
-            </option>
-          ))}
-        </select>
+        {isCsv ? (
+          <span className="preview-panel-csv-label">CSV Row</span>
+        ) : (
+          <select
+            className="select select-sm"
+            value={selectedTemplate}
+            onChange={(e) => setTemplate(e.target.value)}
+          >
+            {(schema.templates ?? []).map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </select>
+        )}
       </div>
 
       <div className="preview-panel-body">
-        {card ? (
+        {isCsv ? (
+          csvRecord ? (
+            <table className="preview-csv-table">
+              <tbody>
+                {schema.fields.map((field) => (
+                  <tr key={field.id}>
+                    <th>{field.label}</th>
+                    <td>{csvRecord[field.id] || <em>(empty)</em>}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p className="preview-empty">No rows to preview yet. Import a source file to begin.</p>
+          )
+        ) : card ? (
           isList ? (
             <div className="preview-list-row">
               <strong>{card.title}</strong>

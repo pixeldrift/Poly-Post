@@ -1,4 +1,4 @@
-import type { Connection, PostTypeSchema, SourceRow, TargetField } from '../types';
+import type { Connection, SourceRow, TargetField, TargetSchema } from '../types';
 import { buildPreviewRecord } from './transform';
 
 export interface PreviewCard {
@@ -13,7 +13,7 @@ function fieldByPattern(fields: TargetField[], pattern: RegExp): TargetField | u
 }
 
 export function renderPreviewCard(
-  schema: PostTypeSchema,
+  schema: TargetSchema,
   connections: Connection[],
   row: SourceRow,
 ): PreviewCard {
@@ -43,7 +43,7 @@ export function renderPreviewCard(
     detailLines.push({ label: 'Phone', value: record[phoneField.id] });
   }
   for (const field of schema.fields) {
-    if (field.group !== 'custom' || usedIds.has(field.id)) continue;
+    if (field.group === 'standard' || usedIds.has(field.id)) continue;
     const value = record[field.id];
     if (value) detailLines.push({ label: field.label, value });
   }

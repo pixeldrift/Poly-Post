@@ -1,6 +1,6 @@
 import { useMapperStore } from '../store';
 import { connectionResultPreview, splitValue } from '../engine/transform';
-import type { ConnectionType } from '../types';
+import type { ConnectionFormat, ConnectionType } from '../types';
 import { Modal } from './Modal';
 import './EditConnectionModal.css';
 
@@ -8,6 +8,15 @@ const TYPE_OPTIONS: { type: ConnectionType; label: string; glyph: string }[] = [
   { type: 'direct', label: 'Direct', glyph: '→' },
   { type: 'merge', label: 'Merge', glyph: '⇥' },
   { type: 'split', label: 'Split', glyph: '⇉' },
+];
+
+const FORMAT_OPTIONS: { value: ConnectionFormat | 'none'; label: string }[] = [
+  { value: 'none', label: 'No formatting' },
+  { value: 'phone', label: 'Phone number — (555) 123-4567' },
+  { value: 'titlecase', label: 'Title Case' },
+  { value: 'uppercase', label: 'UPPERCASE' },
+  { value: 'lowercase', label: 'lowercase' },
+  { value: 'trim', label: 'Trim whitespace' },
 ];
 
 export function EditConnectionModal() {
@@ -157,6 +166,25 @@ export function EditConnectionModal() {
             )}
           </div>
         )}
+
+        <div className="edit-connection-section">
+          <span className="edit-connection-label">Format Output As</span>
+          <select
+            className="select select-sm"
+            value={connection.format ?? 'none'}
+            onChange={(e) =>
+              updateConnection(connection.id, {
+                format: e.target.value === 'none' ? undefined : (e.target.value as ConnectionFormat),
+              })
+            }
+          >
+            {FORMAT_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        </div>
 
         <div className="edit-connection-section">
           <span className="edit-connection-label">Result Preview</span>

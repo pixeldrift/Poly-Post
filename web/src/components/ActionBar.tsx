@@ -7,9 +7,10 @@ const DRAFT_KEY = 'polypost.draft';
 export function ActionBar() {
   const connections = useMapperStore((s) => s.connections);
   const selectedTemplate = useMapperStore((s) => s.selectedTemplate);
-  const selectedPostTypeId = useMapperStore((s) => s.selectedPostTypeId);
+  const selectedTargetSchemaId = useMapperStore((s) => s.selectedTargetSchemaId);
+  const schema = useMapperStore((s) => s.selectedSchema());
   const runAutoMatch = useMapperStore((s) => s.runAutoMatch);
-  const generatePosts = useMapperStore((s) => s.generatePosts);
+  const generateOutput = useMapperStore((s) => s.generateOutput);
   const [savedNotice, setSavedNotice] = useState(false);
 
   const handleCancel = () => {
@@ -21,11 +22,13 @@ export function ActionBar() {
   const handleSaveDraft = () => {
     localStorage.setItem(
       DRAFT_KEY,
-      JSON.stringify({ connections, selectedTemplate, selectedPostTypeId, savedAt: Date.now() }),
+      JSON.stringify({ connections, selectedTemplate, selectedTargetSchemaId, savedAt: Date.now() }),
     );
     setSavedNotice(true);
     setTimeout(() => setSavedNotice(false), 2200);
   };
+
+  const generateLabel = schema.outputKind === 'csv' ? 'Export CSV' : 'Generate Posts';
 
   return (
     <div className="action-bar">
@@ -37,8 +40,8 @@ export function ActionBar() {
         <button className="btn" onClick={handleSaveDraft}>
           Save Draft
         </button>
-        <button className="btn btn-primary" onClick={generatePosts}>
-          Generate Posts
+        <button className="btn btn-primary" onClick={generateOutput}>
+          {generateLabel}
         </button>
       </div>
     </div>

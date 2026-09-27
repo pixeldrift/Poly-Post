@@ -1,12 +1,16 @@
-import type { Connection, PostTypeSchema, SourceField, TargetField } from '../types';
+import type { Connection, SourceField, TargetField, TargetSchema } from '../types';
 
 function normalize(s: string): string {
   return s.toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
+function fieldNames(field: TargetField): string[] {
+  return [field.label, ...field.aliases].map(normalize);
+}
+
 function scoreMatch(source: SourceField, target: TargetField): number {
   const sourceNorm = normalize(source.name);
-  const candidates = [target.label, ...target.aliases].map(normalize);
+  const candidates = fieldNames(target);
   if (candidates.includes(sourceNorm)) return 1;
   const partial = candidates.some((c) => c.includes(sourceNorm) || sourceNorm.includes(c));
   return partial ? 0.6 : 0;
@@ -18,14 +22,35 @@ function nextId(prefix: string): string {
   return `${prefix}-${Date.now().toString(36)}-${idCounter}`;
 }
 
+function pushConnection(
+  connections: Connection[],
+  target: TargetField,
+  partial: Omit<Connection, 'id' | 'targetId' | 'format'>,
+): void {
+  connections.push({
+    id: nextId('conn'),
+    targetId: target.id,
+    format: target.formatHint,
+    ...partial,
+  });
+}
+
+/** Comma-delimited "address" -> up to four split targets, in source-value order. */
+const ADDRESS_PART_TARGETS: { names: string[]; partIndex: number }[] = [
+  { names: ['street'], partIndex: 0 },
+  { names: ['city', 'town'], partIndex: 1 },
+  { names: ['state', 'province'], partIndex: 2 },
+  { names: ['zip', 'zipcode', 'postalcode', 'postcode'], partIndex: 3 },
+];
+
 /**
  * Suggests connections by matching source column names to target field
  * names/aliases, with two hand-curated fallbacks (first+last -> merge,
- * a comma-delimited "address" -> split into city/state) for fields that
- * don't match 1:1. A real engine would generalize these as pluggable
+ * a comma-delimited "address" -> split into up to four parts) for fields
+ * that don't match 1:1. A real engine would generalize these as pluggable
  * heuristics; this is enough to make auto-match feel intelligent for now.
  */
-export function autoMatch(sourceFields: SourceField[], schema: PostTypeSchema): Connection[] {
+export function autoMatch(sourceFields: SourceField[], schema: TargetSchema): Connection[] {
   const connections: Connection[] = [];
   const usedTargets = new Set<string>();
   const usedSources = new Set<string>();
@@ -40,26 +65,21 @@ export function autoMatch(sourceFields: SourceField[], schema: PostTypeSchema): 
       }
     }
     if (best) {
-      connections.push({
-        id: nextId('conn'),
-        type: 'direct',
-        sourceIds: [best.source.id],
-        targetId: target.id,
-      });
+      pushConnection(connections, target, { type: 'direct', sourceIds: [best.source.id] });
       usedTargets.add(target.id);
       usedSources.add(best.source.id);
     }
   }
 
-  const nameTarget = schema.fields.find((f) => normalize(f.label) === 'name');
+  const nameTarget = schema.fields.find((f) =>
+    fieldNames(f).some((n) => n === 'name' || n === 'fullname'),
+  );
   const first = sourceFields.find((f) => normalize(f.name).includes('first'));
   const last = sourceFields.find((f) => normalize(f.name).includes('last'));
   if (nameTarget && !usedTargets.has(nameTarget.id) && first && last) {
-    connections.push({
-      id: nextId('conn'),
+    pushConnection(connections, nameTarget, {
       type: 'merge',
       sourceIds: [first.id, last.id],
-      targetId: nameTarget.id,
       mergeSeparator: ' ',
     });
     usedTargets.add(nameTarget.id);
@@ -67,30 +87,23 @@ export function autoMatch(sourceFields: SourceField[], schema: PostTypeSchema): 
     usedSources.add(last.id);
   }
 
-  const address = sourceFields.find((f) => normalize(f.name).includes('address') && !usedSources.has(f.id));
-  const cityTarget = schema.fields.find((f) => normalize(f.label) === 'city');
-  const stateTarget = schema.fields.find((f) => normalize(f.label) === 'state');
-  if (address && cityTarget && !usedTargets.has(cityTarget.id)) {
-    connections.push({
-      id: nextId('conn'),
-      type: 'split',
-      sourceIds: [address.id],
-      targetId: cityTarget.id,
-      splitSeparators: [','],
-      partIndex: 1,
-    });
-    usedTargets.add(cityTarget.id);
-  }
-  if (address && stateTarget && !usedTargets.has(stateTarget.id)) {
-    connections.push({
-      id: nextId('conn'),
-      type: 'split',
-      sourceIds: [address.id],
-      targetId: stateTarget.id,
-      splitSeparators: [','],
-      partIndex: 2,
-    });
-    usedTargets.add(stateTarget.id);
+  const address = sourceFields.find(
+    (f) => normalize(f.name).includes('address') && !usedSources.has(f.id),
+  );
+  if (address) {
+    for (const { names, partIndex } of ADDRESS_PART_TARGETS) {
+      const target = schema.fields.find(
+        (f) => !usedTargets.has(f.id) && fieldNames(f).some((n) => names.includes(n)),
+      );
+      if (!target) continue;
+      pushConnection(connections, target, {
+        type: 'split',
+        sourceIds: [address.id],
+        splitSeparators: [','],
+        partIndex,
+      });
+      usedTargets.add(target.id);
+    }
   }
 
   return connections;

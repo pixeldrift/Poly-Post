@@ -1,4 +1,4 @@
-import type { PostTypeSchema, SourceField, SourceRow } from '../types';
+import type { Scenario, SourceField, SourceRow, TargetSchema } from '../types';
 
 const FIRST_NAMES = [
   'James', 'Maria', 'Robert', 'Linda', 'David', 'Susan', 'Michael', 'Karen',
@@ -37,7 +37,7 @@ function phoneFor(i: number): string {
   return `555-${exchange}-${line}`;
 }
 
-export const SOURCE_FIELDS: SourceField[] = [
+const SOURCE_FIELDS: SourceField[] = [
   { id: 'src-first', name: 'first', sampleValue: 'James' },
   { id: 'src-last', name: 'last', sampleValue: 'Kirk' },
   { id: 'src-office', name: 'office', sampleValue: '555-123-4567' },
@@ -48,7 +48,7 @@ export const SOURCE_FIELDS: SourceField[] = [
   { id: 'src-hire-date', name: 'hire date', sampleValue: '2021-06-01' },
 ];
 
-export const SOURCE_ROWS: SourceRow[] = Array.from({ length: 34 }, (_, i) => {
+const SOURCE_ROWS: SourceRow[] = Array.from({ length: 34 }, (_, i) => {
   const first = i === 0 ? 'James' : pick(FIRST_NAMES, i, 1);
   const last = i === 0 ? 'Kirk' : pick(LAST_NAMES, i, 2);
   const [city, state] = i === 0 ? ['Riverside', 'IA'] : pick(CITIES, i, 3);
@@ -65,9 +65,10 @@ export const SOURCE_ROWS: SourceRow[] = Array.from({ length: 34 }, (_, i) => {
   };
 });
 
-export const EMPLOYEE_POST_TYPE: PostTypeSchema = {
+const EMPLOYEE_TARGET: TargetSchema = {
   id: 'employee',
   label: 'Employee Directory',
+  outputKind: 'wordpress',
   templates: ['Employee Profile', 'Directory Card', 'Compact List Row'],
   fields: [
     { id: 'tgt-name', label: 'Name', group: 'custom', aliases: ['name', 'full name', 'fullname'], required: true },
@@ -81,20 +82,28 @@ export const EMPLOYEE_POST_TYPE: PostTypeSchema = {
   ],
 };
 
-export const POST_TYPES: PostTypeSchema[] = [
-  EMPLOYEE_POST_TYPE,
-  {
-    id: 'location',
-    label: 'Branch Location',
-    templates: ['Location Detail', 'Map Pin Card'],
-    fields: [
-      { id: 'loc-name', label: 'Branch Name', group: 'custom', aliases: ['name', 'branch'] },
-      { id: 'loc-address', label: 'Street Address', group: 'custom', aliases: ['address', 'street'] },
-      { id: 'loc-city', label: 'City', group: 'custom', aliases: ['city'] },
-      { id: 'loc-phone', label: 'Phone', group: 'custom', aliases: ['phone', 'telephone'] },
-      { id: 'loc-url', label: 'Website URL', group: 'custom', aliases: ['url', 'website'] },
-      { id: 'loc-post-date', label: 'Post Date', group: 'standard', aliases: ['post date', 'date'] },
-      { id: 'loc-post-author', label: 'Post Author', group: 'standard', aliases: ['author'] },
-    ],
-  },
-];
+const LOCATION_TARGET: TargetSchema = {
+  id: 'location',
+  label: 'Branch Location',
+  outputKind: 'wordpress',
+  templates: ['Location Detail', 'Map Pin Card'],
+  fields: [
+    { id: 'loc-name', label: 'Branch Name', group: 'custom', aliases: ['name', 'branch'] },
+    { id: 'loc-address', label: 'Street Address', group: 'custom', aliases: ['address', 'street'] },
+    { id: 'loc-city', label: 'City', group: 'custom', aliases: ['city'] },
+    { id: 'loc-phone', label: 'Phone', group: 'custom', aliases: ['phone', 'telephone'] },
+    { id: 'loc-url', label: 'Website URL', group: 'custom', aliases: ['url', 'website'] },
+    { id: 'loc-post-date', label: 'Post Date', group: 'standard', aliases: ['post date', 'date'] },
+    { id: 'loc-post-author', label: 'Post Author', group: 'standard', aliases: ['author'] },
+  ],
+};
+
+export const WORDPRESS_SCENARIO: Scenario = {
+  id: 'wordpress-import',
+  label: 'WordPress Multi-Post Import',
+  description: 'Map a spreadsheet of records onto a WordPress custom post type and generate posts.',
+  sourceFileName: 'employee-directory.csv',
+  sourceFields: SOURCE_FIELDS,
+  sourceRows: SOURCE_ROWS,
+  targetSchemas: [EMPLOYEE_TARGET, LOCATION_TARGET],
+};
