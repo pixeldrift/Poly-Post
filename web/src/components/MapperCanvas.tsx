@@ -10,7 +10,7 @@ import { useMapperStore } from '../store';
 import { SourceFieldNode, type SourceNodeData } from './nodes/SourceFieldNode';
 import { TargetFieldNode, type TargetNodeData } from './nodes/TargetFieldNode';
 import { HubNode, type HubNodeData } from './nodes/HubNode';
-import { TrayBoxNode, type TrayBoxData } from './nodes/TrayBoxNode';
+import { TrayBackgroundNode, type TrayBackgroundData } from './nodes/TrayBackgroundNode';
 import { DividerLineNode } from './nodes/DividerLineNode';
 import { MappingEdge, type MappingEdgeData } from './edges/MappingEdge';
 import { aggregateStatus, connectionStatus } from '../engine/transform';
@@ -21,7 +21,7 @@ const nodeTypes = {
   sourceField: SourceFieldNode,
   targetField: TargetFieldNode,
   hub: HubNode,
-  trayBox: TrayBoxNode,
+  trayBackground: TrayBackgroundNode,
   dividerLine: DividerLineNode,
 };
 const edgeTypes = { mapping: MappingEdge };
@@ -33,7 +33,7 @@ const ROW_HEIGHT = 64;
 const TOP_MARGIN = 12;
 const FIELD_NODE_WIDTH = 126;
 const FIELD_NODE_HEIGHT = 52;
-const COLUMN_GAP = 52;
+const COLUMN_GAP = 84;
 const HUB_WIDTH = 40;
 const SOURCE_X = 0;
 const TARGET_X = FIELD_NODE_WIDTH + COLUMN_GAP;
@@ -48,7 +48,13 @@ function rowToY(row: number): number {
   return TOP_MARGIN + row * ROW_HEIGHT;
 }
 
-function CanvasInner({ onHeight }: { onHeight: (h: number) => void }) {
+export interface CanvasLayoutInfo {
+  height: number;
+  hasTray: boolean;
+  hintOpacity: number;
+}
+
+function CanvasInner({ onLayoutInfo }: { onLayoutInfo: (info: CanvasLayoutInfo) => void }) {
   const sourceFields = useMapperStore((s) => s.sourceFields);
   const connections = useMapperStore((s) => s.connections);
   const connectFields = useMapperStore((s) => s.connectFields);
@@ -81,7 +87,15 @@ function CanvasInner({ onHeight }: { onHeight: (h: number) => void }) {
       hasTray ? trayFieldsStartY + Math.max(traySourceCount, trayTargetCount) * ROW_HEIGHT : 0,
     ) + 16;
 
-  useEffect(() => onHeight(canvasHeight), [canvasHeight, onHeight]);
+  const totalFieldCount = sourceFields.length + schema.fields.length;
+  const connectedFieldCount = totalFieldCount - traySourceCount - trayTargetCount;
+  const progress = totalFieldCount > 0 ? connectedFieldCount / totalFieldCount : 0;
+  const hintOpacity = hasTray ? Math.max(0.35, 1 - progress) : 0;
+
+  useEffect(
+    () => onLayoutInfo({ height: canvasHeight, hasTray, hintOpacity }),
+    [canvasHeight, hasTray, hintOpacity, onLayoutInfo],
+  );
 
   const nodes: Node[] = useMemo(() => {
     const result: Node[] = [];
@@ -152,31 +166,15 @@ function CanvasInner({ onHeight }: { onHeight: (h: number) => void }) {
       });
     }
 
-    const trayBoxHeight = (count: number) =>
-      count === 0 ? 0 : (count - 1) * ROW_HEIGHT + LABEL_HEIGHT + FIELD_NODE_HEIGHT + TRAY_BOX_PAD;
-    const trayBoxY = trayLabelY - TRAY_BOX_PAD;
-
-    if (traySourceCount > 0) {
-      const data: TrayBoxData = { label: 'Available Fields' };
+    if (hasTray) {
+      const maxTrayCount = Math.max(traySourceCount, trayTargetCount);
+      const trayBandHeight = (maxTrayCount - 1) * ROW_HEIGHT + LABEL_HEIGHT + FIELD_NODE_HEIGHT + TRAY_BOX_PAD;
+      const data: TrayBackgroundData = { label: 'Available Fields' };
       result.push({
-        id: 'tray-box-source',
-        type: 'trayBox',
-        position: { x: SOURCE_X - TRAY_BOX_PAD, y: trayBoxY },
-        style: { width: FIELD_NODE_WIDTH + TRAY_BOX_PAD * 2, height: trayBoxHeight(traySourceCount) },
-        data,
-        draggable: false,
-        connectable: false,
-        selectable: false,
-        zIndex: -1,
-      });
-    }
-    if (trayTargetCount > 0) {
-      const data: TrayBoxData = { label: 'Available Fields' };
-      result.push({
-        id: 'tray-box-target',
-        type: 'trayBox',
-        position: { x: TARGET_X - TRAY_BOX_PAD, y: trayBoxY },
-        style: { width: FIELD_NODE_WIDTH + TRAY_BOX_PAD * 2, height: trayBoxHeight(trayTargetCount) },
+        id: 'tray-background',
+        type: 'trayBackground',
+        position: { x: SOURCE_X, y: trayLabelY - TRAY_BOX_PAD },
+        style: { width: CANVAS_CONTENT_WIDTH, height: trayBandHeight },
         data,
         draggable: false,
         connectable: false,
@@ -208,6 +206,7 @@ function CanvasInner({ onHeight }: { onHeight: (h: number) => void }) {
     unconnectedTargetFields,
     trayFieldsStartY,
     trayLabelY,
+    hasTray,
     traySourceCount,
     trayTargetCount,
     canvasHeight,
@@ -279,7 +278,11 @@ function CanvasInner({ onHeight }: { onHeight: (h: number) => void }) {
 const CANVAS_SIDE_PADDING = 14;
 
 export function MapperCanvas() {
-  const [height, setHeight] = useState(240);
+  const [layoutInfo, setLayoutInfo] = useState<CanvasLayoutInfo>({
+    height: 240,
+    hasTray: true,
+    hintOpacity: 1,
+  });
 
   return (
     <section className="mapper-canvas card">
@@ -291,16 +294,20 @@ export function MapperCanvas() {
           <span>Source</span>
           <span>Target</span>
         </div>
-        <div className="mapper-canvas-body" style={{ height }}>
-          <ReactFlowProvider>
-            <CanvasInner onHeight={setHeight} />
-          </ReactFlowProvider>
+        <div className="mapper-canvas-body" style={{ height: layoutInfo.height }}>
+          <div className="mapper-canvas-flow" style={{ width: CANVAS_CONTENT_WIDTH }}>
+            <ReactFlowProvider>
+              <CanvasInner onLayoutInfo={setLayoutInfo} />
+            </ReactFlowProvider>
+          </div>
         </div>
-        <p className="mapper-canvas-hint">
-          Drag a field's dot across to connect it. Drop a second field on an already-connected
-          slot to merge or split. Unconnected fields wait in the tray below — you don't have to
-          map everything.
-        </p>
+        {layoutInfo.hasTray && (
+          <p className="mapper-canvas-hint" style={{ opacity: layoutInfo.hintOpacity }}>
+            Available fields wait above — drag a dot across to connect one, or drop a second
+            field on an already-connected slot to merge or split. You don't have to map
+            everything.
+          </p>
+        )}
       </div>
     </section>
   );
