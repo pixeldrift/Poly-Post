@@ -29,18 +29,23 @@ const nodeTypes = {
 const edgeTypes = { mapping: MappingEdge };
 
 const ROW_HEIGHT = 64;
+const ROW_GAP = 12;
 const TOP_MARGIN = 12;
 const SOURCE_X = 24;
 const FIELD_NODE_WIDTH = 208;
-const FIELD_NODE_HEIGHT = 52;
 const TARGET_X = 480;
-const HUB_WIDTH = 30;
+const HUB_WIDTH = 40;
 const DIVIDER_WIDTH = 10;
 const HUB_X = (SOURCE_X + FIELD_NODE_WIDTH + TARGET_X) / 2 - HUB_WIDTH / 2;
-const HUB_Y_OFFSET = 8;
 const TRAY_GAP = 32;
 const LABEL_HEIGHT = 24;
 const TRAY_BOX_PAD = 16;
+
+/** Pixel height for a node spanning `span` grid rows, with the same trailing
+ * gap a single-row field naturally has — keeps every row equidistant. */
+function spanHeight(span: number): number {
+  return span * ROW_HEIGHT - ROW_GAP;
+}
 
 function rowToY(row: number): number {
   return TOP_MARGIN + row * ROW_HEIGHT;
@@ -84,6 +89,7 @@ function CanvasInner() {
 
     sourceFields.forEach((field) => {
       const connectedRow = layout.sourceRow.get(field.id);
+      const span = layout.sourceSpan.get(field.id) ?? 1;
       const trayIndex = unconnectedSourceFields.findIndex((f) => f.id === field.id);
       const y = connectedRow !== undefined ? rowToY(connectedRow) : trayFieldsStartY + trayIndex * ROW_HEIGHT;
       const data: SourceNodeData = {
@@ -95,6 +101,7 @@ function CanvasInner() {
         id: field.id,
         type: 'sourceField',
         position: { x: SOURCE_X, y },
+        style: { width: FIELD_NODE_WIDTH, height: spanHeight(span) },
         data,
         draggable: false,
         connectable: true,
@@ -104,6 +111,7 @@ function CanvasInner() {
 
     schema.fields.forEach((field) => {
       const connectedRow = layout.targetRow.get(field.id);
+      const span = layout.targetSpan.get(field.id) ?? 1;
       const trayIndex = unconnectedTargetFields.findIndex((f) => f.id === field.id);
       const y = connectedRow !== undefined ? rowToY(connectedRow) : trayFieldsStartY + trayIndex * ROW_HEIGHT;
       const data: TargetNodeData = {
@@ -116,6 +124,7 @@ function CanvasInner() {
         id: field.id,
         type: 'targetField',
         position: { x: TARGET_X, y },
+        style: { width: FIELD_NODE_WIDTH, height: spanHeight(span) },
         data,
         draggable: false,
         connectable: true,
@@ -125,6 +134,7 @@ function CanvasInner() {
 
     for (const cluster of clusters) {
       const row = layout.hubRow.get(cluster.key) ?? 0;
+      const span = layout.hubSpan.get(cluster.key) ?? 1;
       const statuses = cluster.connectionIds
         .map((id) => connections.find((c) => c.id === id))
         .filter((c): c is NonNullable<typeof c> => Boolean(c))
@@ -137,7 +147,8 @@ function CanvasInner() {
       result.push({
         id: `hub:${cluster.key}`,
         type: 'hub',
-        position: { x: HUB_X, y: rowToY(row) + HUB_Y_OFFSET },
+        position: { x: HUB_X, y: rowToY(row) },
+        style: { width: HUB_WIDTH, height: spanHeight(span) },
         data,
         draggable: false,
         connectable: false,
@@ -146,7 +157,7 @@ function CanvasInner() {
     }
 
     const trayBoxHeight = (count: number) =>
-      count === 0 ? 0 : (count - 1) * ROW_HEIGHT + LABEL_HEIGHT + FIELD_NODE_HEIGHT + TRAY_BOX_PAD;
+      count === 0 ? 0 : (count - 1) * ROW_HEIGHT + LABEL_HEIGHT + spanHeight(1) + TRAY_BOX_PAD;
     const trayBoxY = trayLabelY - TRAY_BOX_PAD;
 
     if (traySourceCount > 0) {

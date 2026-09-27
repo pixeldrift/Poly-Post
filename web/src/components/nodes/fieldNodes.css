@@ -1,5 +1,7 @@
 .field-node {
-  width: 208px;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
   background: var(--color-surface);
   border: 1.5px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -123,8 +125,11 @@
 
 .hub-node-wrap {
   position: relative;
-  width: 30px;
-  height: 30px;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .hub-handle {
@@ -135,21 +140,25 @@
 }
 
 .hub-node {
-  width: 28px;
-  height: 28px;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
   border-radius: 50%;
-  border: 2px solid var(--color-ok);
+  border: 3px solid var(--color-ok);
   background: var(--color-ok-soft);
   color: var(--color-ok);
-  font-size: 13px;
-  font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-md);
   transition: transform 0.12s ease;
   padding: 0;
+}
+
+.hub-node svg {
+  width: 20px;
+  height: 20px;
 }
 
 .hub-node:hover {
