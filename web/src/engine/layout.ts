@@ -107,75 +107,56 @@ export function computeClusters(
 }
 
 export interface ClusterLayout {
-  /** Row position (in whole row-units, not pixels) for each connected field id. */
+  /** Row position (in row-units, not pixels) for each connected source/target field id. */
   sourceRow: Map<string, number>;
   targetRow: Map<string, number>;
-  /** How many grid rows tall each field's box visually spans (default 1). */
-  sourceSpan: Map<string, number>;
-  targetSpan: Map<string, number>;
-  /** Row position and span of each cluster's connector hub, keyed by cluster key. */
+  /** Row position of each cluster's connector hub, keyed by cluster key. */
   hubRow: Map<string, number>;
-  hubSpan: Map<string, number>;
   /** Total height of the laid-out block, in row-units. */
   totalRows: number;
 }
 
 /**
  * Positions every field on a uniform, equidistant row grid — every row is
- * exactly one row-unit tall, no matter which cluster it belongs to, so the
- * whole canvas reads like a table. A 1:1 connection sits on one row; the
- * "many" side of a merge/split occupies consecutive rows starting at the
- * cluster's top row, and the "one" side gets a box that *spans* the same
- * rows (rendered tall, content vertically centered via CSS) so it still
- * reads as centered against the many without floating off the row grid.
+ * exactly one row-unit tall everywhere, so the whole canvas reads like a
+ * table. Every field box stays the same fixed size; a 1:1 connection sits
+ * on one row, and the "many" side of a merge/split occupies consecutive
+ * rows starting at the cluster's top row. The "one" side and its hub sit
+ * at the geometric center of that span — which can land between two grid
+ * rows — rather than stretching to fill it; the resulting empty space
+ * above/below is expected, not a bug.
  */
 export function computeClusterLayout(clusters: FieldCluster[]): ClusterLayout {
   const sourceRow = new Map<string, number>();
   const targetRow = new Map<string, number>();
-  const sourceSpan = new Map<string, number>();
-  const targetSpan = new Map<string, number>();
   const hubRow = new Map<string, number>();
-  const hubSpan = new Map<string, number>();
   let cursor = 0;
 
   for (const cluster of clusters) {
     const height = Math.max(cluster.sourceIds.length, cluster.targetIds.length);
 
     if (cluster.kind === 'merge') {
-      cluster.sourceIds.forEach((id, i) => {
-        sourceRow.set(id, cursor + i);
-        sourceSpan.set(id, 1);
-      });
-      targetRow.set(cluster.targetIds[0], cursor);
-      targetSpan.set(cluster.targetIds[0], height);
+      cluster.sourceIds.forEach((id, i) => sourceRow.set(id, cursor + i));
+      const center = cursor + (cluster.sourceIds.length - 1) / 2;
+      targetRow.set(cluster.targetIds[0], center);
+      hubRow.set(cluster.key, center);
     } else if (cluster.kind === 'split') {
-      cluster.targetIds.forEach((id, i) => {
-        targetRow.set(id, cursor + i);
-        targetSpan.set(id, 1);
-      });
-      sourceRow.set(cluster.sourceIds[0], cursor);
-      sourceSpan.set(cluster.sourceIds[0], height);
+      cluster.targetIds.forEach((id, i) => targetRow.set(id, cursor + i));
+      const center = cursor + (cluster.targetIds.length - 1) / 2;
+      sourceRow.set(cluster.sourceIds[0], center);
+      hubRow.set(cluster.key, center);
     } else if (cluster.kind === 'direct') {
       sourceRow.set(cluster.sourceIds[0], cursor);
-      sourceSpan.set(cluster.sourceIds[0], 1);
       targetRow.set(cluster.targetIds[0], cursor);
-      targetSpan.set(cluster.targetIds[0], 1);
+      hubRow.set(cluster.key, cursor);
     } else {
-      cluster.sourceIds.forEach((id, i) => {
-        sourceRow.set(id, cursor + i);
-        sourceSpan.set(id, 1);
-      });
-      cluster.targetIds.forEach((id, i) => {
-        targetRow.set(id, cursor + i);
-        targetSpan.set(id, 1);
-      });
+      cluster.sourceIds.forEach((id, i) => sourceRow.set(id, cursor + i));
+      cluster.targetIds.forEach((id, i) => targetRow.set(id, cursor + i));
+      hubRow.set(cluster.key, cursor + (height - 1) / 2);
     }
-
-    hubRow.set(cluster.key, cursor);
-    hubSpan.set(cluster.key, height);
 
     cursor += height;
   }
 
-  return { sourceRow, targetRow, sourceSpan, targetSpan, hubRow, hubSpan, totalRows: cursor };
+  return { sourceRow, targetRow, hubRow, totalRows: cursor };
 }
