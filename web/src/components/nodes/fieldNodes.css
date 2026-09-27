@@ -14,6 +14,13 @@
   border-color: var(--color-teal);
 }
 
+.field-node.is-tray {
+  border-style: dashed;
+  border-color: var(--color-text-faint);
+  background: var(--color-surface);
+  box-shadow: none;
+}
+
 .field-node-main {
   display: flex;
   flex-direction: column;
@@ -84,15 +91,27 @@
   border: 2px solid var(--color-surface) !important;
 }
 
-.section-label-node {
-  width: 460px;
-  font-size: 11px;
-  font-weight: 700;
+.tray-box-node {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  border: 1.5px dashed var(--color-text-faint);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-muted);
+  padding: 8px 12px 0;
+}
+
+.tray-box-label {
+  display: inline-block;
+  font-size: 10.5px;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--color-text-faint);
-  padding-top: 4px;
-  border-top: 1px dashed var(--color-border);
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 2px 9px;
 }
 
 .react-flow__node-hub {
@@ -150,13 +169,28 @@
 }
 
 .divider-line-node {
-  width: 1px;
-  background: repeating-linear-gradient(
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
     to bottom,
-    var(--color-border) 0,
-    var(--color-border) 6px,
-    transparent 6px,
-    transparent 12px
+    transparent,
+    var(--color-teal-soft) 6%,
+    var(--color-teal-soft) 94%,
+    transparent
   );
   pointer-events: none;
+}
+
+.divider-line-node::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  transform: translateX(-50%);
+  background: var(--color-teal);
+  opacity: 0.55;
+  border-radius: 1px;
 }

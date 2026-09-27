@@ -12,8 +12,8 @@ import { useMapperStore } from '../store';
 import { SourceFieldNode, type SourceNodeData } from './nodes/SourceFieldNode';
 import { TargetFieldNode, type TargetNodeData } from './nodes/TargetFieldNode';
 import { HubNode, type HubNodeData } from './nodes/HubNode';
-import { SectionLabelNode, type SectionLabelData } from './nodes/SectionLabelNode';
-import { DividerLineNode, type DividerLineData } from './nodes/DividerLineNode';
+import { TrayBoxNode, type TrayBoxData } from './nodes/TrayBoxNode';
+import { DividerLineNode } from './nodes/DividerLineNode';
 import { MappingEdge, type MappingEdgeData } from './edges/MappingEdge';
 import { aggregateStatus, connectionStatus } from '../engine/transform';
 import { computeClusters, computeClusterLayout } from '../engine/layout';
@@ -23,7 +23,7 @@ const nodeTypes = {
   sourceField: SourceFieldNode,
   targetField: TargetFieldNode,
   hub: HubNode,
-  sectionLabel: SectionLabelNode,
+  trayBox: TrayBoxNode,
   dividerLine: DividerLineNode,
 };
 const edgeTypes = { mapping: MappingEdge };
@@ -32,12 +32,15 @@ const ROW_HEIGHT = 64;
 const TOP_MARGIN = 12;
 const SOURCE_X = 24;
 const FIELD_NODE_WIDTH = 208;
+const FIELD_NODE_HEIGHT = 52;
 const TARGET_X = 480;
 const HUB_WIDTH = 30;
+const DIVIDER_WIDTH = 10;
 const HUB_X = (SOURCE_X + FIELD_NODE_WIDTH + TARGET_X) / 2 - HUB_WIDTH / 2;
 const HUB_Y_OFFSET = 8;
 const TRAY_GAP = 32;
 const LABEL_HEIGHT = 24;
+const TRAY_BOX_PAD = 16;
 
 function rowToY(row: number): number {
   return TOP_MARGIN + row * ROW_HEIGHT;
@@ -142,40 +145,49 @@ function CanvasInner() {
       });
     }
 
+    const trayBoxHeight = (count: number) =>
+      count === 0 ? 0 : (count - 1) * ROW_HEIGHT + LABEL_HEIGHT + FIELD_NODE_HEIGHT + TRAY_BOX_PAD;
+    const trayBoxY = trayLabelY - TRAY_BOX_PAD;
+
     if (traySourceCount > 0) {
-      const data: SectionLabelData = { text: 'Available Fields' };
+      const data: TrayBoxData = { label: 'Available Fields' };
       result.push({
-        id: 'label-source-tray',
-        type: 'sectionLabel',
-        position: { x: SOURCE_X, y: trayLabelY },
+        id: 'tray-box-source',
+        type: 'trayBox',
+        position: { x: SOURCE_X - TRAY_BOX_PAD, y: trayBoxY },
+        style: { width: FIELD_NODE_WIDTH + TRAY_BOX_PAD * 2, height: trayBoxHeight(traySourceCount) },
         data,
         draggable: false,
         connectable: false,
         selectable: false,
+        zIndex: -1,
       });
     }
     if (trayTargetCount > 0) {
-      const data: SectionLabelData = { text: 'Available Fields' };
+      const data: TrayBoxData = { label: 'Available Fields' };
       result.push({
-        id: 'label-target-tray',
-        type: 'sectionLabel',
-        position: { x: TARGET_X, y: trayLabelY },
+        id: 'tray-box-target',
+        type: 'trayBox',
+        position: { x: TARGET_X - TRAY_BOX_PAD, y: trayBoxY },
+        style: { width: FIELD_NODE_WIDTH + TRAY_BOX_PAD * 2, height: trayBoxHeight(trayTargetCount) },
         data,
         draggable: false,
         connectable: false,
         selectable: false,
+        zIndex: -1,
       });
     }
 
-    const dividerData: DividerLineData = { height: canvasHeight };
     result.push({
       id: 'divider-line',
       type: 'dividerLine',
-      position: { x: HUB_X + HUB_WIDTH / 2, y: 0 },
-      data: dividerData,
+      position: { x: HUB_X + HUB_WIDTH / 2 - DIVIDER_WIDTH / 2, y: 0 },
+      style: { width: DIVIDER_WIDTH, height: canvasHeight },
+      data: {},
       draggable: false,
       connectable: false,
       selectable: false,
+      zIndex: -1,
     });
 
     return result;
@@ -265,8 +277,8 @@ export function MapperCanvas() {
   return (
     <section className="mapper-canvas card">
       <div className="mapper-canvas-header">
-        <span>From</span>
-        <span>To</span>
+        <span>Source</span>
+        <span>Target</span>
       </div>
       <div className="mapper-canvas-body">
         <ReactFlowProvider>

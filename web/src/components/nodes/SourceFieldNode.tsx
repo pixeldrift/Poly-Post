@@ -9,7 +9,9 @@ export interface SourceNodeData {
 
 export function SourceFieldNode({ data }: NodeProps<SourceNodeData>) {
   return (
-    <div className={`field-node source-field-node${data.connected ? ' is-connected' : ''}`}>
+    <div
+      className={`field-node source-field-node${data.connected ? ' is-connected' : ' is-tray'}`}
+    >
       <div className="field-node-main">
         <span className="field-node-name">{data.name}</span>
         <span className="field-node-sample" title={data.sampleValue}>
