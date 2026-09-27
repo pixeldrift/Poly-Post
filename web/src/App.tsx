@@ -2,7 +2,6 @@ import { useMapperStore } from './store';
 import { Logo } from './components/Logo';
 import { MapperCanvas } from './components/MapperCanvas';
 import { PreviewPanel } from './components/PreviewPanel';
-import { UnassignedBar } from './components/UnassignedBar';
 import { ActionBar } from './components/ActionBar';
 import { ImportDataModal } from './components/ImportDataModal';
 import { EditConnectionModal } from './components/EditConnectionModal';
@@ -95,7 +94,6 @@ function App() {
       </main>
 
       <footer className="app-footer">
-        <UnassignedBar />
         <ActionBar />
       </footer>
 

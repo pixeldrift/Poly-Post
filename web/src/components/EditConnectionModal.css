@@ -28,40 +28,40 @@
   color: var(--color-text-faint);
 }
 
-.connection-type-row {
+.add-field-picker {
   display: flex;
   gap: 8px;
 }
 
-.connection-type-btn {
+.add-field-picker .select {
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 10px 6px;
-  border-radius: var(--radius-sm);
-  border: 1.5px solid var(--color-border);
-  background: var(--color-surface);
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--color-text-muted);
-  cursor: pointer;
 }
 
-.connection-type-btn span[aria-hidden] {
+.split-branch-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+}
+
+.split-branch-target {
+  flex: 0 0 78px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.split-branch-row .select-sm {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.split-branch-remove {
   font-size: 16px;
 }
 
-.connection-type-btn.is-active {
-  border-color: var(--color-teal);
-  background: var(--color-teal-soft);
-  color: var(--color-teal);
-}
-
-.connection-type-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
+.remove-connection-btn {
+  align-self: flex-start;
+  color: var(--color-needs);
 }
 
 .merge-chip-row {
@@ -134,9 +134,4 @@
   justify-content: space-between;
   padding-top: 6px;
   border-top: 1px solid var(--color-border);
-}
-
-.edit-connection-footer-right {
-  display: flex;
-  gap: 8px;
 }

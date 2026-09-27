@@ -83,3 +83,80 @@
   background: var(--color-teal) !important;
   border: 2px solid var(--color-surface) !important;
 }
+
+.section-label-node {
+  width: 460px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-faint);
+  padding-top: 4px;
+  border-top: 1px dashed var(--color-border);
+}
+
+.react-flow__node-hub {
+  /* React Flow sets pointer-events:none on nodes with no drag/select/connect
+     interactions; this node is deliberately none of those but still needs
+     its own click handler to fire. */
+  pointer-events: auto !important;
+}
+
+.hub-node-wrap {
+  position: relative;
+  width: 30px;
+  height: 30px;
+}
+
+.hub-handle {
+  opacity: 0;
+  pointer-events: none;
+  width: 4px !important;
+  height: 4px !important;
+}
+
+.hub-node {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--color-ok);
+  background: var(--color-ok-soft);
+  color: var(--color-ok);
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.12s ease;
+  padding: 0;
+}
+
+.hub-node:hover {
+  transform: scale(1.12);
+}
+
+.hub-node.status-needs-input {
+  border-color: var(--color-needs);
+  background: var(--color-needs-soft);
+  color: var(--color-needs);
+}
+
+.hub-node.status-warning {
+  border-color: var(--color-warning);
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
+}
+
+.divider-line-node {
+  width: 1px;
+  background: repeating-linear-gradient(
+    to bottom,
+    var(--color-border) 0,
+    var(--color-border) 6px,
+    transparent 6px,
+    transparent 12px
+  );
+  pointer-events: none;
+}
