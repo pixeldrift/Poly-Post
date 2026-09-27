@@ -1,0 +1,118 @@
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.app-brand {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.app-title {
+  font-size: 20px;
+  font-weight: 800;
+  font-style: italic;
+  letter-spacing: -0.3px;
+}
+
+.app-subtitle {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  font-weight: 500;
+  padding-left: 8px;
+  border-left: 1px solid var(--color-border);
+}
+
+.app-header-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.field-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.select {
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  padding: 7px 10px;
+  font-size: 13.5px;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.app-scenario-description {
+  margin: 0;
+  padding: 6px 24px;
+  font-size: 12.5px;
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.app-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 24px;
+  background: var(--color-surface-muted);
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.toolbar-file {
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.toolbar-file em {
+  font-style: normal;
+  color: var(--color-text-faint);
+}
+
+.app-main {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 16px;
+  padding: 16px 24px;
+  min-height: 0;
+}
+
+.app-footer {
+  flex-shrink: 0;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+  padding: 12px 24px 16px;
+}
+
+@media (max-width: 960px) {
+  .app-main {
+    grid-template-columns: 1fr;
+  }
+}
