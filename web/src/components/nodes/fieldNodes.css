@@ -16,6 +16,10 @@
   border-color: var(--color-teal);
 }
 
+.target-field-node.is-connected {
+  border-color: var(--color-accent);
+}
+
 .field-node.is-tray {
   border-style: dashed;
   border-color: var(--color-text-faint);
@@ -91,6 +95,10 @@
   height: 12px !important;
   background: var(--color-teal) !important;
   border: 2px solid var(--color-surface) !important;
+}
+
+.target-field-node .field-handle {
+  background: var(--color-accent) !important;
 }
 
 .tray-box-node {
@@ -185,7 +193,7 @@
     to bottom,
     transparent,
     var(--color-teal-soft) 6%,
-    var(--color-teal-soft) 94%,
+    var(--color-accent-soft) 94%,
     transparent
   );
   pointer-events: none;
@@ -199,7 +207,7 @@
   bottom: 0;
   width: 2px;
   transform: translateX(-50%);
-  background: var(--color-teal);
+  background: linear-gradient(to bottom, var(--color-teal), var(--color-accent));
   opacity: 0.55;
   border-radius: 1px;
 }

@@ -1,23 +1,45 @@
 .mapper-canvas {
   display: flex;
-  flex-direction: column;
   min-height: 0;
-  overflow: hidden;
+  width: fit-content;
+  max-width: 100%;
+  justify-self: start;
+}
+
+.mapper-canvas-inner {
+  max-width: 100%;
+  overflow-x: auto;
 }
 
 .mapper-canvas-header {
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
   display: flex;
   justify-content: space-between;
-  padding: 14px 40px 12px 40px;
+  padding: 14px 14px 12px;
   border-bottom: 1px solid var(--color-border);
   background: var(--color-surface-muted);
+}
+
+.mapper-canvas-header::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  transform: translateX(-50%);
+  background: linear-gradient(to bottom, var(--color-teal), var(--color-accent));
+  opacity: 0.5;
+  border-radius: 1px;
 }
 
 .mapper-canvas-header span {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 800;
   letter-spacing: -0.01em;
   color: var(--color-text);
@@ -42,13 +64,16 @@
 }
 
 .mapper-canvas-body {
-  flex: 1;
-  min-height: 0;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 0 14px;
 }
 
 .mapper-canvas-hint {
+  box-sizing: border-box;
+  width: 100%;
   margin: 0;
-  padding: 8px 20px;
+  padding: 8px 14px;
   font-size: 12px;
   color: var(--color-text-faint);
   border-top: 1px solid var(--color-border);
