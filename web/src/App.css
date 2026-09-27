@@ -1,14 +1,15 @@
 .app-shell {
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  overflow: hidden;
+  min-height: 100vh;
 }
 
 .app-header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
+  gap: 8px 16px;
   padding: 14px 24px;
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
@@ -18,7 +19,9 @@
 .app-brand {
   display: flex;
   align-items: baseline;
+  flex-wrap: wrap;
   gap: 10px;
+  min-width: 0;
 }
 
 .app-title {
@@ -38,8 +41,10 @@
 
 .app-header-controls {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 10px;
+  gap: 8px 10px;
+  min-width: 0;
 }
 
 .field-label {
@@ -58,6 +63,8 @@
   font-size: 13.5px;
   color: var(--color-text);
   cursor: pointer;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .app-scenario-description {
@@ -96,16 +103,14 @@
 }
 
 .app-main {
-  flex: 1;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 340px;
+  grid-template-columns: minmax(0, max-content) minmax(280px, 340px);
+  align-items: start;
   gap: 16px;
   padding: 16px 24px;
-  min-height: 0;
 }
 
 .app-footer {
-  flex-shrink: 0;
   border-top: 1px solid var(--color-border);
   background: var(--color-surface);
   padding: 12px 24px 16px;
@@ -114,5 +119,19 @@
 @media (max-width: 960px) {
   .app-main {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .app-header,
+  .app-toolbar,
+  .app-scenario-description,
+  .app-footer {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .app-main {
+    padding: 12px;
   }
 }

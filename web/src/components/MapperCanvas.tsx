@@ -1,7 +1,5 @@
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useEffect, useState } from 'react';
 import ReactFlow, {
-  Background,
-  Controls,
   ReactFlowProvider,
   type Connection as RFConnection,
   type Edge,
@@ -28,24 +26,29 @@ const nodeTypes = {
 };
 const edgeTypes = { mapping: MappingEdge };
 
+// Every field box is a fixed size and the two columns sit only as far
+// apart as the connector hub needs — this is meant to read as a compact,
+// scrolling list (like a table), not a wide pannable canvas.
 const ROW_HEIGHT = 64;
 const TOP_MARGIN = 12;
-const SOURCE_X = 24;
-const FIELD_NODE_WIDTH = 208;
+const FIELD_NODE_WIDTH = 126;
 const FIELD_NODE_HEIGHT = 52;
-const TARGET_X = 480;
+const COLUMN_GAP = 52;
 const HUB_WIDTH = 40;
+const SOURCE_X = 0;
+const TARGET_X = FIELD_NODE_WIDTH + COLUMN_GAP;
+export const CANVAS_CONTENT_WIDTH = TARGET_X + FIELD_NODE_WIDTH;
+const HUB_X = CANVAS_CONTENT_WIDTH / 2 - HUB_WIDTH / 2;
 const DIVIDER_WIDTH = 10;
-const HUB_X = (SOURCE_X + FIELD_NODE_WIDTH + TARGET_X) / 2 - HUB_WIDTH / 2;
 const TRAY_GAP = 32;
 const LABEL_HEIGHT = 24;
-const TRAY_BOX_PAD = 16;
+const TRAY_BOX_PAD = 14;
 
 function rowToY(row: number): number {
   return TOP_MARGIN + row * ROW_HEIGHT;
 }
 
-function CanvasInner() {
+function CanvasInner({ onHeight }: { onHeight: (h: number) => void }) {
   const sourceFields = useMapperStore((s) => s.sourceFields);
   const connections = useMapperStore((s) => s.connections);
   const connectFields = useMapperStore((s) => s.connectFields);
@@ -76,7 +79,9 @@ function CanvasInner() {
     Math.max(
       connectedBlockBottom,
       hasTray ? trayFieldsStartY + Math.max(traySourceCount, trayTargetCount) * ROW_HEIGHT : 0,
-    ) + 20;
+    ) + 16;
+
+  useEffect(() => onHeight(canvasHeight), [canvasHeight, onHeight]);
 
   const nodes: Node[] = useMemo(() => {
     const result: Node[] = [];
@@ -227,7 +232,7 @@ function CanvasInner() {
           source: sourceId,
           target: hubId,
           type: 'mapping',
-          data: { status: sharedStatus },
+          data: { status: sharedStatus, side: 'source' },
         });
       }
       for (const targetId of cluster.targetIds) {
@@ -237,7 +242,7 @@ function CanvasInner() {
           source: hubId,
           target: targetId,
           type: 'mapping',
-          data: { status: conn ? connectionStatus(conn) : sharedStatus },
+          data: { status: conn ? connectionStatus(conn) : sharedStatus, side: 'target' },
         });
       }
     }
@@ -260,38 +265,43 @@ function CanvasInner() {
       nodeTypes={nodeTypes}
       edgeTypes={edgeTypes}
       onConnect={onConnect}
-      fitView
-      fitViewOptions={{ padding: 0.15, maxZoom: 1 }}
-      minZoom={0.4}
-      maxZoom={1.25}
       nodesDraggable={false}
-      panOnScroll
+      panOnDrag={false}
       zoomOnScroll={false}
+      zoomOnPinch={false}
+      zoomOnDoubleClick={false}
+      preventScrolling={false}
       proOptions={{ hideAttribution: false }}
-    >
-      <Background gap={20} color="var(--color-border)" />
-      <Controls showInteractive={false} position="bottom-left" />
-    </ReactFlow>
+    />
   );
 }
 
+const CANVAS_SIDE_PADDING = 14;
+
 export function MapperCanvas() {
+  const [height, setHeight] = useState(240);
+
   return (
     <section className="mapper-canvas card">
-      <div className="mapper-canvas-header">
-        <span>Source</span>
-        <span>Target</span>
+      <div
+        className="mapper-canvas-inner"
+        style={{ width: CANVAS_CONTENT_WIDTH + CANVAS_SIDE_PADDING * 2 }}
+      >
+        <div className="mapper-canvas-header">
+          <span>Source</span>
+          <span>Target</span>
+        </div>
+        <div className="mapper-canvas-body" style={{ height }}>
+          <ReactFlowProvider>
+            <CanvasInner onHeight={setHeight} />
+          </ReactFlowProvider>
+        </div>
+        <p className="mapper-canvas-hint">
+          Drag a field's dot across to connect it. Drop a second field on an already-connected
+          slot to merge or split. Unconnected fields wait in the tray below — you don't have to
+          map everything.
+        </p>
       </div>
-      <div className="mapper-canvas-body">
-        <ReactFlowProvider>
-          <CanvasInner />
-        </ReactFlowProvider>
-      </div>
-      <p className="mapper-canvas-hint">
-        Drag a field's dot across to connect it. Drop a second field on an already-connected slot
-        to merge or split. Unconnected fields wait in the tray below — you don't have to map
-        everything.
-      </p>
     </section>
   );
 }

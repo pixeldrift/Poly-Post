@@ -4,11 +4,15 @@
   opacity: 0.55;
 }
 
+.mapping-edge-path.side-target {
+  stroke: var(--color-accent);
+}
+
 .mapping-edge-path.status-needs-input {
-  stroke: var(--color-needs);
+  stroke: var(--color-needs) !important;
   stroke-dasharray: 5 4;
 }
 
 .mapping-edge-path.status-warning {
-  stroke: var(--color-warning);
+  stroke: var(--color-warning) !important;
 }

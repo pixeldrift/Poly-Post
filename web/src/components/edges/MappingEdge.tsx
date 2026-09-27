@@ -3,6 +3,7 @@ import './MappingEdge.css';
 
 export interface MappingEdgeData {
   status: 'ok' | 'needs-input' | 'warning';
+  side: 'source' | 'target';
 }
 
 export function MappingEdge({
@@ -24,6 +25,7 @@ export function MappingEdge({
   });
 
   const statusClass = `status-${data?.status ?? 'ok'}`;
+  const sideClass = `side-${data?.side ?? 'source'}`;
 
-  return <path className={`mapping-edge-path ${statusClass}`} d={edgePath} fill="none" />;
+  return <path className={`mapping-edge-path ${sideClass} ${statusClass}`} d={edgePath} fill="none" />;
 }
